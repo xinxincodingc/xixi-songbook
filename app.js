@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  const songs = window.XIXI_SONGS;
+  let songs = window.XIXI_SONGS, catalogVersion = null;
   const $ = id => document.getElementById(id);
   const pageSize = 10;
   let mode = 'style', filter = '全部', query = '', page = 0, toastTimer;
@@ -64,7 +64,9 @@
   }
   function renderOriginals() {
     const palette = [['#713b48','#f7e5d9'],['#60736e','#ececdd'],['#bfaa94','#342d2c'],['#303b4a','#eee4cf'],['#9c6556','#f4e5d1'],['#b4b59f','#3f4740']];
-    $('original-grid').innerHTML = songs.filter(s => s.style === '原创').map((s,i) => `<article class="original-card"><div class="mini-sleeve" style="--sleeve:${palette[i][0]};--cover-ink:${palette[i][1]}"><span class="cover-title">${escaped(s.title)}</span><span class="cover-star">${['✳','✧','○','☾','✶','⊕'][i]}</span><span class="cover-no">XIXI / SINGLE 0${i+1}</span></div><div class="original-meta"><strong>${escaped(s.title)}</strong><button class="${selected.has(s.id) ? 'chosen' : ''}" data-song="${s.id}" aria-label="${selected.has(s.id) ? '取消' : '点歌'} ${escaped(s.title)}" aria-pressed="${selected.has(s.id)}">${selected.has(s.id) ? '✓' : '+'}</button></div><p>ORIGINAL BY XIXI</p></article>`).join('');
+    document.querySelector('.original-count').innerHTML = `${String(songs.filter(s=>s.style==='原创').length).padStart(2,'0')} <small>首原创单曲</small>`;
+    const coverPalette = palette;
+    $('original-grid').innerHTML = songs.filter(s => s.style === '原创').map((s,i) => `<article class="original-card"><div class="mini-sleeve" style="--sleeve:${coverPalette[i%6][0]};--cover-ink:${coverPalette[i%6][1]}"><span class="cover-title">${escaped(s.title)}</span><span class="cover-star">${['✳','✧','○','☾','✶','⊕'][i%6]}</span><span class="cover-no">XIXI / SINGLE ${String(i+1).padStart(2,'0')}</span></div><div class="original-meta"><strong>${escaped(s.title)}</strong><button class="${selected.has(s.id) ? 'chosen' : ''}" data-song="${s.id}" aria-label="${selected.has(s.id) ? '取消' : '点歌'} ${escaped(s.title)}" aria-pressed="${selected.has(s.id)}">${selected.has(s.id) ? '✓' : '+'}</button></div><p>ORIGINAL BY XIXI</p></article>`).join('');
     bindSongButtons($('original-grid'));
   }
   function renderSelection() {
@@ -101,6 +103,7 @@
     $('refresh-queue').disabled = true;
     try {
       if (queueApi) {
+        await loadCatalog();
         $('queue-status').textContent = '正在更新今日点歌…';
         const data = await queueFetch('/requests');
         queueDay = data.day;
@@ -117,6 +120,16 @@
     } finally {
       loadingQueue = false;
       $('refresh-queue').disabled = false;
+    }
+  }
+  async function loadCatalog() {
+    const data = await queueFetch('/catalog');
+    if (data.songs && data.version !== catalogVersion) {
+      songs = data.songs.filter(s=>s.enabled);
+      catalogVersion = data.version;
+      for (const id of selected) if (!songs.some(s=>s.id===id)) selected.delete(id);
+      if (filter !== '全部' && !songs.some(s=>(mode==='style'?s.style:s.artist)===filter)) filter='全部';
+      renderFilters();renderSongs();renderOriginals();renderSelection();
     }
   }
   $('style-tab').addEventListener('click', () => changeMode('style'));
