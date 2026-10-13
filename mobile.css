@@ -1,0 +1,65 @@
+.songbook-title{font:500 21px var(--sans);letter-spacing:2px;color:var(--wine)}
+.today{border-top:1px solid var(--line);background:#efeae1}
+.queue-date{font-size:12px;color:var(--wine);white-space:nowrap}
+.queue-toolbar{display:flex;justify-content:space-between;align-items:center;font-size:13px;border-bottom:1px solid var(--line);padding-bottom:14px}
+.queue-toolbar button{min-height:44px;color:var(--wine)}
+.queue-status,.queue-note{font-size:12px;color:#6d675e;line-height:1.9}
+.queue-status{margin:18px 0}
+.queue-empty{padding:35px 10px;text-align:center}
+.queue-empty>span{font-size:42px;color:var(--wine)}
+.queue-empty h3{font:24px var(--serif);font-weight:400}
+.queue-empty p{font-size:13px;color:#6d675e;line-height:1.9}
+.queue-empty a{display:inline-block;color:var(--wine);padding:14px;font-size:13px}
+.queue-item{padding:20px 0;border-bottom:1px solid var(--line)}
+.queue-item-head{display:flex;align-items:center;gap:12px;font-size:12px}
+.queue-item-head strong{font-weight:500;color:var(--wine)}
+.queue-item-head time{margin-left:auto;color:#6d675e}
+.queue-tracks p{font-size:16px;margin:12px 0}
+.queue-tracks small{font-size:12px;color:#6d675e;display:block;margin-top:5px}
+.queue-message{font-size:13px;line-height:1.8;white-space:pre-wrap;overflow-wrap:anywhere;color:#6d675e;margin-bottom:0}
+.queue-item-head strong,.queue-item-head>span{overflow-wrap:anywhere;min-width:0}
+.queue-item-head time{flex-shrink:0}
+@media(max-width:680px){
+  .header{height:70px;padding-inline:6%}.header nav{gap:17px;font-size:12px}.nav-link{min-height:44px;display:flex;align-items:center}
+  .hero{grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);padding:30px 6% 28px;gap:14px;min-height:0;align-items:center}
+  .hero-copy{min-width:0}.hero .eyebrow{font-size:10px;letter-spacing:2px}.hero h1{font-size:clamp(28px,8.4vw,49px);letter-spacing:-1px;line-height:1.25;margin:14px 0}
+  .hero h1 .italic{font-size:1.22em}.hero-sub{font-size:12px;line-height:1.9;margin:12px 0 18px}.hero-sub br{display:none}
+  .hero .primary{font-size:12px;padding:11px 12px;gap:8px;min-height:44px}
+  .hero-bottom{position:static;flex-wrap:wrap;margin-top:18px;font-size:8px;gap:7px}
+  .turntable-wrap{width:100%;max-width:none;margin:0;padding:18px 0 24px;align-self:center}
+  .turntable{padding:12px;max-width:none;border-radius:8px;box-shadow:0 7px 15px #34312712,inset 0 0 0 3px #e9e5da,inset 0 0 0 4px #cfc9bd}
+  .handwritten{font-size:14px;right:0;top:-10px;white-space:nowrap}.handwritten span{font-size:19px;margin-left:3px}
+  .deck-top{font-size:4px;letter-spacing:.4px}.deck-top>span:last-child{display:none}
+  .tonearm .arm-pivot{width:17px;height:17px;border-width:3px}.arm-shaft{width:4px}.arm-head{width:9px;height:22px}
+  .deck-bottom{left:auto;right:-5px;bottom:-20px}.deck-bottom>span{display:none}.spin-toggle{width:44px;height:44px;background:var(--paper);font-size:14px}
+  .vinyl-label{inset:28%;border-width:3px}.vinyl-label>span{font-size:14px}.record-caption{font-size:5px;letter-spacing:1px;margin-top:23px}.hero-stamp{display:none}
+  .ribbon{padding:15px 6%;font-size:11px}
+  .section{padding:36px 6%}.songbook-title{font-size:21px;letter-spacing:2px}
+  .section-head>p{display:none}.section-head{margin-bottom:20px}h2{font-size:28px}
+  .mode-tabs{gap:30px}.mode-tabs button{min-height:46px;font-size:15px}
+  .filter{min-height:44px;padding:10px 14px;font-size:13px}.filter>span:last-child{font-size:10px}
+  .search{min-height:48px;background:var(--white)}.search input{font-size:16px}#result-count{font-size:11px}
+  .list-header{grid-template-columns:1fr 44px;font-size:10px}.list-header>span:nth-child(2),.list-header>span:nth-child(3){display:none}
+  .song-row{position:relative;grid-template-columns:minmax(0,1fr) 44px;grid-template-rows:auto auto;column-gap:12px;row-gap:5px;min-height:80px;padding:13px 0}
+  .track-title{grid-column:1;grid-row:1;gap:11px}.track-number{font-size:12px;min-width:17px}.track-text{font-size:16px;white-space:normal;line-height:1.5;overflow-wrap:anywhere}
+  .artist-name{grid-column:1;grid-row:2;font-size:12px;line-height:1.5;margin-left:28px;padding-right:52px;color:#6d675e}
+  .song-row>.genre{position:absolute;right:56px;bottom:14px;font-size:9px;padding:2px 5px}
+  .request-button{grid-column:2;grid-row:1/3;width:44px;height:44px;font-size:24px}.request-button.chosen{font-size:17px}
+  .list-footer>span{font-size:11px}.list-footer button{width:44px;height:44px;font-size:17px}
+  .repertoire-note{font-size:11px;line-height:1.8}
+  .original-grid{gap:23px 12px}.original-meta{align-items:start;gap:2px;position:relative;padding-bottom:40px}
+  .original-meta strong{font-size:13px;line-height:1.5}.original-meta button{position:absolute;left:0;bottom:0;width:38px;height:38px;font-size:20px}
+  .original-card>p{font-size:8px;margin-top:8px}.cover-title{font-size:17px}
+  .about .bio,.timeline p{font-size:14px;line-height:2}.intro{font-size:18px}.text-link{font-size:12px}
+  .social-stats span{font-size:12px}.experience>div>p{font-size:13px}.timeline details{font-size:13px}
+  .request-bar{bottom:max(10px,env(safe-area-inset-bottom));padding:12px;gap:10px}.request-bar strong{font-size:13px}#selection-summary{font-size:11px;max-width:130px}
+  .request-bar .primary{font-size:12px;min-height:44px;padding:10px 12px}.request-bar .primary span{font-size:17px}
+  form label{font-size:14px}form input,form textarea{font-size:16px}.form-row{gap:12px}.dialog-sub{font-size:14px}.delivery-note{font-size:12px}
+  .selected-chip{font-size:14px;padding:7px 10px}.selected-chip button{width:32px;height:32px}
+  dialog .primary{font-size:15px;min-height:48px}.dialog-close{width:44px;height:44px}#form-status{font-size:13px}
+  .closing h2{font-size:18px}.queue-date{font-size:11px}.queue-item-head{font-size:13px}.queue-status{font-size:12px}
+}
+@media(max-width:350px){
+  .header nav{gap:12px;font-size:11px}.hero-sub{font-size:11px}.hero .primary{font-size:11px;padding:10px 8px}.hero-bottom{font-size:7px;gap:5px}
+  .request-bar .bar-disc{display:none}#selection-summary{max-width:112px}.request-bar .primary{font-size:11px}.form-row{grid-template-columns:1fr}
+}

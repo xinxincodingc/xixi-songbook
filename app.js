@@ -4,6 +4,9 @@
   const $ = id => document.getElementById(id);
   const pageSize = 10;
   let mode = 'style', filter = '全部', query = '', page = 0, toastTimer;
+  const queueApi = (window.XIXI_QUEUE_API || '').replace(/\/$/, '');
+  const dayOf = date => new Intl.DateTimeFormat('sv-SE', {timeZone:'Asia/Shanghai', year:'numeric', month:'2-digit', day:'2-digit'}).format(date);
+  let queueDay = dayOf(new Date()), queueEntries = [], loadingQueue = false, submissionId = null;
   let stored = [];
   try { stored = JSON.parse(localStorage.getItem('xixi-selection') || '[]'); } catch {}
   const selected = new Set(Array.isArray(stored) ? stored.filter(id => songs.some(s => s.id === id)) : []);
@@ -80,13 +83,41 @@
     });
     renderFilters(); renderSongs();
   }
-  function requestText() {
-    const data = new FormData($('request-form'));
-    const name = String(data.get('nickname') || '').trim() || '一位听众';
-    const table = String(data.get('table') || '').trim() || '未填写';
-    const message = String(data.get('message') || '').trim() || '无';
-    const picked = songs.filter(s => selected.has(s.id));
-    return `Hi xixi，今晚想听这些歌：\n\n${picked.map((s,i) => `${i+1}. ${s.title} — ${s.artist}`).join('\n')}\n\n昵称：${name}\n桌号 / 位置：${table}\n留言：${message}\n\n来自 xixi 线上点歌本`;
+  function renderQueue() {
+    $('queue-date').textContent = queueDay.replaceAll('-', ' / ');
+    $('queue-count').textContent = `${queueEntries.reduce((total, item) => total + item.songs.length, 0)} 首点歌`;
+    $('today-list').innerHTML = queueEntries.map(item => `<article class="queue-item"><div class="queue-item-head"><strong>${escaped(item.nickname || '一位听众')}</strong><span>${escaped(item.table || '')}</span><time>${new Intl.DateTimeFormat('zh-CN',{timeZone:'Asia/Shanghai',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date(item.createdAt))}</time></div><div class="queue-tracks">${item.songs.map(s => `<p>${escaped(s.title)} <small>${escaped(s.artist)}</small></p>`).join('')}</div>${item.message ? `<p class="queue-message">${escaped(item.message)}</p>` : ''}</article>`).join('') || `<div class="queue-empty"><span>◎</span><h3>今天的第一首，会是什么？</h3><p>${queueApi ? '选一首喜欢的歌，留在今日点歌单。' : '在这台设备上选择歌曲，即可查看今日记录。'}</p><a href="#songbook">去点一首 ↗</a></div>`;
+  }
+  async function queueFetch(path, options = {}) {
+    const response = await fetch(`${queueApi}${path}`, {...options, signal:AbortSignal.timeout(12000)});
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || '点歌服务暂时无法连接，请稍后重试。');
+    return data;
+  }
+  async function loadQueue() {
+    if (loadingQueue) return;
+    loadingQueue = true;
+    queueDay = dayOf(new Date());
+    $('refresh-queue').disabled = true;
+    try {
+      if (queueApi) {
+        $('queue-status').textContent = '正在更新今日点歌…';
+        const data = await queueFetch('/requests');
+        queueDay = data.day;
+        queueEntries = data.requests;
+        $('queue-status').textContent = '今日点歌实时共享 · 每 15 秒更新';
+      } else {
+        const all = JSON.parse(localStorage.getItem('xixi-daily-requests') || '[]');
+        queueEntries = all.filter(item => item.day === queueDay);
+        $('queue-status').textContent = '当前仅保存于这台设备，其他访客和 xixi 的设备暂时看不到；共享点歌尚未接通。';
+      }
+      renderQueue();
+    } catch {
+      $('queue-status').textContent = queueApi ? '点歌单更新失败，请点击刷新重试。' : '浏览器无法读取本机记录，请允许网站存储后重试。';
+    } finally {
+      loadingQueue = false;
+      $('refresh-queue').disabled = false;
+    }
   }
   $('style-tab').addEventListener('click', () => changeMode('style'));
   $('artist-tab').addEventListener('click', () => changeMode('artist'));
@@ -113,27 +144,38 @@
     const rect = $('request-dialog').getBoundingClientRect();
     if (e.target === $('request-dialog') && (e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom)) $('request-dialog').close();
   });
-  $('request-form').addEventListener('submit', e => {
+  $('request-form').addEventListener('submit', async e => {
     e.preventDefault();
-    if (!selected.size) return;
-    const subject = `给 xixi 的点歌 · ${songs.filter(s => selected.has(s.id)).map(s => s.title).join('、')}`;
-    const link = document.createElement('a');
-    link.href = `mailto:cwx0516@outlook.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(requestText())}`;
-    link.click();
-    $('form-status').textContent = '请在邮箱应用中点击发送。若邮箱没有打开，可以复制点歌内容，手动发到上方邮箱。';
-  });
-  $('copy-request').addEventListener('click', async () => {
-    if (!selected.size) return;
-    const text = requestText();
+    if (!selected.size || $('submit-request').disabled) return;
+    const fields = new FormData($('request-form'));
+    submissionId ||= crypto.randomUUID();
+    const entry = {
+      id:submissionId, day:dayOf(new Date()), createdAt:new Date().toISOString(),
+      nickname:String(fields.get('nickname') || '').trim() || '一位听众',
+      table:String(fields.get('table') || '').trim(), message:String(fields.get('message') || '').trim(),
+      songs:songs.filter(s => selected.has(s.id)).map(s => ({id:s.id,title:s.title,artist:s.artist}))
+    };
+    $('submit-request').disabled = true;
+    $('form-status').textContent = '正在加入点歌单…';
     try {
-      await navigator.clipboard.writeText(text);
-      $('form-status').textContent = '点歌内容已复制，请粘贴到邮件中发送给 xixi。';
-    } catch {
-      const area = document.createElement('textarea');
-      area.value = text; $('request-form').appendChild(area); area.focus(); area.select();
-      const copied = document.execCommand('copy'); area.remove();
-      $('form-status').textContent = copied ? '点歌内容已复制，请粘贴到邮件中发送。' : '浏览器无法自动复制，请手动复制以下内容：';
-      if (!copied) { const pre = document.createElement('pre'); pre.style.whiteSpace = 'pre-wrap'; pre.textContent = text; $('form-status').appendChild(pre); }
+      if (queueApi) await queueFetch('/requests', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(entry)});
+      else {
+        const all = JSON.parse(localStorage.getItem('xixi-daily-requests') || '[]').filter(item => item.day === entry.day);
+        if (!all.some(item => item.id === entry.id)) all.push(entry);
+        localStorage.setItem('xixi-daily-requests', JSON.stringify(all));
+      }
+      submissionId = null;
+      selected.clear();
+      try { localStorage.removeItem('xixi-selection'); } catch {}
+      renderSongs(); renderOriginals(); renderSelection();
+      $('request-form').reset(); $('request-dialog').close();
+      await loadQueue();
+      $('today').scrollIntoView({behavior:'smooth'});
+      showToast(queueApi ? '已加入今日点歌单' : '已保存到本机今日记录，尚未同步给 xixi');
+    } catch (error) {
+      $('form-status').textContent = queueApi ? error.message : '无法保存点歌，请允许浏览器存储后重试。';
+    } finally {
+      $('submit-request').disabled = false;
     }
   });
   document.addEventListener('keydown', e => {
@@ -142,5 +184,11 @@
     }
   });
   $('year').textContent = new Date().getFullYear();
+  $('delivery-note').textContent = queueApi ? '歌曲、昵称、桌号和留言会公开显示在今日点歌单中。' : '当前为本机记录：歌曲只显示在这台设备上，不会同步给 xixi。共享点歌服务尚未接通。';
+  $('refresh-queue').addEventListener('click', loadQueue);
+  window.addEventListener('storage', event => { if (event.key === 'xixi-daily-requests') loadQueue(); });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) loadQueue(); });
+  setInterval(() => { if (!document.hidden && (queueApi || queueDay !== dayOf(new Date()))) loadQueue(); }, 15000);
+  loadQueue();
   renderFilters(); renderSongs(); renderOriginals(); renderSelection();
 })();

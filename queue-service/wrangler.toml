@@ -1,0 +1,11 @@
+name = "xixi-daily-requests"
+main = "worker.js"
+compatibility_date = "2026-10-13"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "xixi-daily-requests"
+database_id = "REPLACE_WITH_CREATED_DATABASE_ID"
+
+[triggers]
+crons = ["0 16 * * *"]
